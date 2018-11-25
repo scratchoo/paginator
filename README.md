@@ -62,3 +62,11 @@ function get_custom_db_obj()
 }
 ```
 **It's very important to note that you should never call or return $this->db->get() but only return $this->db, also avoid using limit() on your request building because it's the role of paginator to use it internally**
+
+## Feedback
+
+Please use the [Issues](https://github.com/scratchoo/paginator/issues) for any bugs, feature requests, etc.
+
+## License
+
+MIT License
