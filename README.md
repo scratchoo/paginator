@@ -1,7 +1,7 @@
 # paginator
 A Codeigniter library to add pagination easily
 
-## Usage:
+## Simple Usage:
 
 Download and copy the Paginator.php file to your Codeigniter libraries folder
 
@@ -28,3 +28,37 @@ Finally in your view to add the pagination links :
 ```
 
 The second parameter is optional, if you are using bootstrap 3 or 4 just pass 'bootstrap3' or 'bootstrap4' as a second parameter.
+
+## Customize the Result:
+
+Paginator allows you to specify **where** and **order_by** options to customize your query result like the following:
+
+```php
+$data['posts'] = $this->paginator->paginate('posts', ['base_url' => "posts", 'where' => array('published' => '1'), 'order_by' => 'id asc' , 'per_page' => 15]);
+```
+And that's fine for most situations, but what if you need more complex request ? 
+
+In this case :
+
+1- get rid of **where** and/or **order_by** options
+2- replace the very first parameter of `paginate()` method with custom query builder result, for example :
+
+```php
+$this->load->model('YourModel');
+$custom_object = $this->YourModel->get_custom_db_obj();
+$data['posts'] = $this->paginator->paginate($custom_object, ['base_url' => "posts", 'per_page' => 15]);
+```
+In your model you might have a method that returns the db object, for example
+
+```php
+function get_custom_db_obj()
+{
+  # you can have any complex query here:
+  $this->db->select('*');
+  $this->db->from('posts');
+  $this->db->where(array('published'=>'1'));
+  $this->db->order_by('created_at', 'DESC');
+  return $this->db; // make sure to return $this->db without calling ->get() on it
+}
+```
+**It's very important to note that you should never call or return $this->db->get() but only return $this->db, also avoid using limit() on your request building because it's the role of paginator to use it internally**
