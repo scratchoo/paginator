@@ -41,6 +41,7 @@ And that's fine for most situations, but what if you need more complex request ?
 In this case :
 
 1- get rid of **where** and/or **order_by** options
+
 2- replace the very first parameter of `paginate()` method with custom query builder result, for example :
 
 ```php
