@@ -2,7 +2,7 @@
 
 class Paginator
 {
-    public static $options;
+    public static $options = array();
 
     function get_links($resources_name, $css_framework=null)
     {
@@ -15,7 +15,10 @@ class Paginator
             $config = $this->$method_name();
         }
 
-        if(Paginator::$options[$resources_name]['query_string']){
+        $total_options = count(Paginator::$options);
+        $resource_ref = $total_options - ($total_options - 1);
+
+        if(Paginator::$options[$resource_ref]['query_string']){
             $config['page_query_string'] = TRUE;
             $config['query_string_segment'] = 'page';
             $base_url_method = '';
@@ -23,12 +26,12 @@ class Paginator
             $base_url_method = '/'.$method;
         }
 
-        $base_url = Paginator::$options[$resources_name]['base_url'] ? Paginator::$options[$resources_name]['base_url'] : "{$resources_name}{$base_url_method}";
+        $base_url = Paginator::$options[$resource_ref]['base_url'] ? Paginator::$options[$resource_ref]['base_url'] : "{$resources_name}{$base_url_method}";
 
         $config['use_page_numbers'] = TRUE; // without this the index will start at 0
         $config['base_url'] = site_url($base_url);
-        $config['total_rows'] = $ci->db->count_all_results($resources_name);
-        $config['per_page'] = Paginator::$options[$resources_name]['per_page'];
+        $config['total_rows'] = Paginator::$options[$resource_ref]['total_rows']; # $ci->db->count_all_results($resources_name);
+        $config['per_page'] = Paginator::$options[$resource_ref]['per_page'];
 
         $ci->pagination->initialize($config);
 
@@ -43,21 +46,71 @@ class Paginator
         $query_string = isset($optional['query_string']) ? $optional['query_string'] : true;
         $base_url = isset($optional['base_url']) ? $optional['base_url'] : null;
 
-        Paginator::$options[$resources] = array('per_page' => $per_page,
+        $resource_ref = count(Paginator::$options) +1;
+
+        Paginator::$options[$resource_ref] = array('per_page' => $per_page,
                                                 'query_string' => $query_string,
                                                 'base_url' =>$base_url);
 
         $ci = & get_instance();
         $limit = $per_page;
 
-        if(Paginator::$options[$resources]['query_string']){
+        if(Paginator::$options[$resource_ref]['query_string']){
             // substruct 1 from $ci->input->get('page', TRUE) because we are using page number instead of indexes
             $offset = !empty($ci->input->get('page', TRUE)) ? $ci->input->get('page', TRUE) : 1;
         }else{
             $offset = !empty($ci->uri->segment(3)) ? $ci->uri->segment(3) : 1;
         }
 
-        return $ci->db->get($resources, $limit, $limit*($offset-1))->result_array();
+        if( !preg_match('/^\d+$/', $offset) ){
+            # $offset isn't a number
+            $offset = 1; // set to the first page
+        }
+
+        # if $resouces is a query object
+        if(is_object($resources) && property_exists($resources, 'dbdriver')){
+
+            # make a copy of the db object, because after calling count_all_results() the db object details will be gone
+            $db_copy = clone $resources;
+
+            Paginator::$options[$resource_ref]['total_rows'] = $ci->db->count_all_results();
+
+            $db_copy->limit($limit, $limit*($offset-1));
+
+            $query = $db_copy->get();
+
+            return $query->result_array();
+
+        }elseif(is_string($resources)){
+
+            if(isset($optional['where'])){
+
+                $ci->db->where($optional['where']);
+
+            }
+
+            Paginator::$options[$resource_ref]['total_rows'] = $ci->db->count_all_results($resources);
+
+            if(isset($optional['where'])){
+
+                $ci->db->where($optional['where']);
+
+            }
+
+            if(isset($optional['order_by'])){
+
+                $ci->db->order_by($optional['order_by']);
+
+            }
+
+            return $ci->db->get($resources, $limit, $limit*($offset-1))->result_array();
+
+        }else{
+
+            throw new Exception('Paginator::paginate =====> if you are using a custom object query please do not call "$this->db->get()" see the documentation for more!');
+
+        }
+
     }
 
     function bootstrap3_config()
