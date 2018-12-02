@@ -6,37 +6,46 @@ class Paginator
 
     function get_links($resources_name, $css_framework=null)
     {
-        $ci = & get_instance();
-        $method = $ci->router->fetch_method();
-        $ci->load->library('pagination');
+        if(!empty(Paginator::$options)){
 
-        if(in_array($css_framework, ['bootstrap3', 'bootstrap4'])){
-            $method_name = $css_framework."_config";
-            $config = $this->$method_name();
-        }
+            $ci = & get_instance();
+            $method = $ci->router->method;
+            $ci->load->library('pagination');
 
-        $total_options = count(Paginator::$options);
-        $resource_ref = $total_options - ($total_options - 1);
+            if(in_array($css_framework, ['bootstrap3', 'bootstrap4'])){
+                $method_name = $css_framework."_config";
+                $config = $this->$method_name();
+            }
 
-        if(Paginator::$options[$resource_ref]['query_string']){
-            $config['page_query_string'] = TRUE;
-            $config['query_string_segment'] = 'page';
-            $base_url_method = '';
+            $total_options = count(Paginator::$options);
+            $resource_ref = $total_options - ($total_options - 1);
+
+            if(Paginator::$options[$resource_ref]['query_string']){
+                $config['page_query_string'] = TRUE;
+                $config['query_string_segment'] = 'page';
+                $base_url_method = '';
+            }else{
+                $base_url_method = '/'.$method;
+            }
+
+            $base_url_option = Paginator::$options[$resource_ref]['base_url'];
+
+            $base_url = $base_url_option ? $base_url_option : "{$resources_name}{$base_url_method}";
+
+            $config['use_page_numbers'] = TRUE; // without this the index will start at 0
+            $config['base_url'] = site_url($base_url);
+            $config['total_rows'] = Paginator::$options[$resource_ref]['total_rows']; # $ci->db->count_all_results($resources_name);
+            $config['per_page'] = Paginator::$options[$resource_ref]['per_page'];
+
+            $ci->pagination->initialize($config);
+
+            return $ci->pagination->create_links();
+
         }else{
-            $base_url_method = '/'.$method;
+
+            return null;
+
         }
-
-        $base_url = Paginator::$options[$resource_ref]['base_url'] ? Paginator::$options[$resource_ref]['base_url'] : "{$resources_name}{$base_url_method}";
-
-        $config['use_page_numbers'] = TRUE; // without this the index will start at 0
-        $config['base_url'] = site_url($base_url);
-        $config['total_rows'] = Paginator::$options[$resource_ref]['total_rows']; # $ci->db->count_all_results($resources_name);
-        $config['per_page'] = Paginator::$options[$resource_ref]['per_page'];
-
-        $ci->pagination->initialize($config);
-
-        return $ci->pagination->create_links();
-
     }
 
     function paginate($resources, $optional = array())
@@ -75,6 +84,8 @@ class Paginator
 
             Paginator::$options[$resource_ref]['total_rows'] = $ci->db->count_all_results();
 
+            $this->prevent_unexisting_page($offset, Paginator::$options[$resource_ref]['total_rows'], $per_page);
+
             $db_copy->limit($limit, $limit*($offset-1));
 
             $query = $db_copy->get();
@@ -90,6 +101,8 @@ class Paginator
             }
 
             Paginator::$options[$resource_ref]['total_rows'] = $ci->db->count_all_results($resources);
+
+            $this->prevent_unexisting_page($offset, Paginator::$options[$resource_ref]['total_rows'], $per_page);
 
             if(isset($optional['where'])){
 
@@ -165,6 +178,25 @@ class Paginator
         $config['last_tag_close'] 	= '</span></li>';
 
         return $config;
+    }
+
+    function prevent_unexisting_page($offset, $total_rows, $per_page)
+    {
+        $total_pages = (int) ceil($total_rows / $per_page );
+
+        if ( $offset > $total_pages )
+        {
+            $url = $this->remove_get_param(uri_string() . '?' . $_SERVER['QUERY_STRING'], 'page');
+            redirect(base_url($url));
+        }
+    }
+
+    function remove_get_param($url, $key)
+    {
+        $url = preg_replace('/(?:&|(\?))' . $key . '=[^&]*(?(1)&|)?/i', "$1", $url);
+        $url = rtrim($url, '?');
+        $url = rtrim($url, '&');
+        return $url;
     }
 
 }
