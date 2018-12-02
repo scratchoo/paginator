@@ -184,7 +184,7 @@ class Paginator
     {
         $total_pages = (int) ceil($total_rows / $per_page );
 
-        if ( $offset > $total_pages )
+        if ( isset($_GET['page']) && $offset > $total_pages )
         {
             $url = $this->remove_get_param(uri_string() . '?' . $_SERVER['QUERY_STRING'], 'page');
             redirect(base_url($url));
