@@ -27,7 +27,7 @@ Finally in your view to add the pagination links :
 <?php echo $this->paginator->get_links('posts', 'bootstrap4'); ?>
 ```
 
-The second parameter is optional, if you are using bootstrap 3 or 4 just pass 'bootstrap3' or 'bootstrap4' as a second parameter.
+The second parameter is optional, the available options currently are: 'bootstrap3' or 'bootstrap4' or 'bulma'. 
 
 ## Customize the Result:
 
