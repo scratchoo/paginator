@@ -12,7 +12,7 @@ class Paginator
             $method = $ci->router->method;
             $ci->load->library('pagination');
 
-            if(in_array($css_framework, ['bootstrap3', 'bootstrap4'])){
+            if(in_array($css_framework, ['bootstrap3', 'bootstrap4', 'bulma'])){
                 $method_name = $css_framework."_config";
                 $config = $this->$method_name();
             }
@@ -177,6 +177,26 @@ class Paginator
         $config['last_tag_open'] 	= '<li class="page-item"><span>';
         $config['last_tag_close'] 	= '</span></li>';
 
+        return $config;
+    }
+
+    function bulma_config()
+    {
+        $config['attributes'] = array('class' => 'pagination-link');
+        $config['full_tag_open'] 	= '<nav class="pagination" role="navigation" aria-label="pagination"> <ul class="pagination-list">';
+        $config['full_tag_close'] 	= '</ul></nav>';
+        $config['num_tag_open'] 	= '<li>';
+        $config['num_tag_close'] 	= '</li>';
+        $config['cur_tag_open'] 	= '<li><a class="pagination-link is-current" aria-current="page">';
+        $config['cur_tag_close'] 	= '</a></li>';
+        $config['next_tag_open'] 	= '<li>';
+        $config['next_tagl_close'] 	= '</li>';
+        $config['prev_tag_open'] 	= '<li>';
+        $config['prev_tagl_close'] 	= '</li>';
+        $config['first_tag_open'] 	= '<li>';
+        $config['first_tag_close'] = '</li>';
+        $config['last_tag_open'] 	= '<li>';
+        $config['last_tag_close'] 	= '</li>';
         return $config;
     }
 
