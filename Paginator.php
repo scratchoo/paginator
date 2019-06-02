@@ -98,6 +98,12 @@ class Paginator
 
                 $ci->db->where($optional['where']);
 
+            }elseif (isset($optional['like'])) {
+
+                foreach ($optional['like'] as $key => $value) {
+                    $ci->db->like($key, $value);
+                }
+
             }
 
             Paginator::$options[$resource_ref]['total_rows'] = $ci->db->count_all_results($resources);
@@ -107,6 +113,12 @@ class Paginator
             if(isset($optional['where'])){
 
                 $ci->db->where($optional['where']);
+
+            }elseif (isset($optional['like'])) {
+
+                foreach ($optional['like'] as $key => $value) {
+                    $ci->db->like($key, $value);
+                }
 
             }
 
