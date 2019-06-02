@@ -31,16 +31,22 @@ The second parameter is optional, the available options currently are: 'bootstra
 
 ## Customize the Result:
 
-Paginator allows you to specify **where** and **order_by** options to customize your query result like the following:
+Paginator allows you to specify **where**, **like** and **order_by** options to customize your query result like the following:
 
 ```php
 $data['posts'] = $this->paginator->paginate('posts', ['base_url' => "posts", 'where' => array('published' => '1'), 'order_by' => 'id asc' , 'per_page' => 15]);
 ```
+or with like :
+
+```php
+$data['posts'] = $this->paginator->paginate('posts', ['base_url' => "posts", 'like' => array('title' => 'some term here'), 'order_by' => 'id asc' , 'per_page' => 15]);
+```
+
 And that's fine for most situations, but what if you need more complex request ? 
 
 In this case :
 
-1- get rid of **where** and/or **order_by** options
+1- get rid of **where**, **like** and **order_by** options
 
 2- replace the very first parameter of `paginate()` method with custom query builder result, for example :
 
